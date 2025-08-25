@@ -5,6 +5,8 @@ import Jetson.GPIO as GPIO
 import time
 import serial
 
+delay_laser = 2  # Delay dalam detik untuk menyalakan laser
+
 # Gunakan mode pin BOARD (nomor fisik)
 GPIO.setmode(GPIO.BOARD)
 
@@ -92,7 +94,7 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
         
         laser_signal(200, ser)
-        time.sleep(2)
+        time.sleep(delay_laser)
         laser_signal(0, ser)
     else:
         annotated_frame = frame
