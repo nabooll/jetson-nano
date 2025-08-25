@@ -3,6 +3,7 @@ import cv2
 import torch
 import Jetson.GPIO as GPIO
 import time
+import serial
 
 # Gunakan mode pin BOARD (nomor fisik)
 GPIO.setmode(GPIO.BOARD)
@@ -39,6 +40,26 @@ print("✅ Kamera aktif. Tekan 'q' untuk keluar.")
 frame_count = 0
 results = None
 
+ser = serial.Serial(
+    port='/dev/ttyTHS1',  # Adjust this if your port is different
+    baudrate=115200,      # Match this to your Wemos's baud rate
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS,
+    timeout=1             # Timeout in seconds
+)
+
+def laser_signal(pwm_value, ser):
+    data_to_send = str(pwm_value)+"\n"
+    print(f"Sending: {data_to_send.strip()}")
+    ser.write(data_to_send.strip().encode('utf-8')) # Encode string to bytes
+
+    # Optional: Read response from Wemos
+    if ser.in_waiting > 0:
+        received_data  = ser.read_until('\n').decode('utf-8', errors='ignore')
+        print(f"Received from Wemos: {received_data}")
+
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -69,6 +90,10 @@ while True:
         cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
         cv2.putText(annotated_frame, label, (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+        
+        laser_signal(200, ser)
+        time.sleep(2)
+        laser_signal(0, ser)
     else:
         annotated_frame = frame
         # Tidak ada objek → relay OFF
